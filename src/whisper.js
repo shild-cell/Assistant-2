@@ -1,9 +1,6 @@
 const axios = require('axios');
-const OpenAI = require('openai');
-const { toFile } = require('openai');
+const FormData = require('form-data');
 const config = require('./config');
-
-const openai = new OpenAI({ apiKey: config.openaiApiKey });
 
 async function withRetry(fn, attempts = 3) {
   let lastErr;
@@ -36,13 +33,23 @@ async function downloadTwilioRecording(recordingUrl) {
 
 async function transcribeRecording(recordingUrl) {
   const audioBuffer = await downloadTwilioRecording(recordingUrl);
-  const file = await toFile(audioBuffer, 'voicemail.mp3');
-  const result = await withRetry(() =>
-    openai.audio.transcriptions.create({
-      file,
-      model: 'whisper-1',
-    })
-  );
+
+  const result = await withRetry(async () => {
+    const form = new FormData();
+    form.append('file', audioBuffer, { filename: 'voicemail.mp3', contentType: 'audio/mpeg' });
+    form.append('model', 'whisper-1');
+
+    const response = await axios.post('https://api.openai.com/v1/audio/transcriptions', form, {
+      headers: {
+        ...form.getHeaders(),
+        Authorization: `Bearer ${config.openaiApiKey}`,
+      },
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+    });
+    return response.data;
+  });
+
   return result.text.trim();
 }
 

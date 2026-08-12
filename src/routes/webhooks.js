@@ -10,6 +10,15 @@ const { logTask } = require('../airtable');
 
 const router = express.Router();
 
+// Never log err directly: Axios/HTTP client errors embed the full request,
+// including Authorization headers, and would leak API keys into logs.
+function describeError(err) {
+  const status = err.response?.status;
+  const apiMessage = err.response?.data?.error?.message;
+  const detail = apiMessage || err.message;
+  return status ? `${detail} (HTTP ${status})` : detail;
+}
+
 function validateTwilioRequest(req, res, next) {
   if (!config.twilio.validateSignature) return next();
 
@@ -73,7 +82,7 @@ router.post('/sms', async (req, res) => {
     const task = await saveAndNotify({ transcript: body, source: 'sms', from });
     twiml.message(`Saved: ${task.title}`);
   } catch (err) {
-    console.error('Failed to process SMS note:', err);
+    console.error('Failed to process SMS note:', describeError(err));
     twiml.message('Sorry, something went wrong saving that note.');
   }
 
@@ -121,7 +130,7 @@ router.post('/recording', async (req, res) => {
       await saveAndNotify({ transcript, source: 'voice', from });
     }
   } catch (err) {
-    console.error('Failed to process voicemail:', err);
+    console.error('Failed to process voicemail:', describeError(err));
   }
 });
 

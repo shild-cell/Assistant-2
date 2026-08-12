@@ -21,7 +21,7 @@ function readAll() {
 function addTask(task) {
   ensureStore();
   const tasks = readAll();
-  const record = { id: tasks.length + 1, ...task };
+  const record = { id: tasks.length + 1, status: 'open', ...task };
   tasks.push(record);
   fs.writeFileSync(filePath, JSON.stringify(tasks, null, 2));
   return record;
@@ -31,4 +31,21 @@ function listTasks() {
   return readAll().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
-module.exports = { addTask, listTasks };
+function setTaskStatus(id, status) {
+  const tasks = readAll();
+  const task = tasks.find((t) => t.id === Number(id));
+  if (!task) return null;
+  task.status = status;
+  fs.writeFileSync(filePath, JSON.stringify(tasks, null, 2));
+  return task;
+}
+
+function deleteTask(id) {
+  const tasks = readAll();
+  const remaining = tasks.filter((t) => t.id !== Number(id));
+  if (remaining.length === tasks.length) return false;
+  fs.writeFileSync(filePath, JSON.stringify(remaining, null, 2));
+  return true;
+}
+
+module.exports = { addTask, listTasks, setTaskStatus, deleteTask };

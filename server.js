@@ -1,7 +1,7 @@
 const express = require('express');
 const config = require('./src/config');
 const webhooks = require('./src/routes/webhooks');
-const { listTasks } = require('./src/db');
+const { listTasks, setTaskStatus, deleteTask } = require('./src/db');
 const { renderDashboard } = require('./src/dashboard');
 
 const app = express();
@@ -30,6 +30,21 @@ function requireDashboardAuth(req, res, next) {
 
 app.get('/dashboard', requireDashboardAuth, (req, res) => {
   res.send(renderDashboard(listTasks()));
+});
+
+app.post('/dashboard/tasks/:id/complete', requireDashboardAuth, (req, res) => {
+  setTaskStatus(req.params.id, 'done');
+  res.redirect('/dashboard');
+});
+
+app.post('/dashboard/tasks/:id/reopen', requireDashboardAuth, (req, res) => {
+  setTaskStatus(req.params.id, 'open');
+  res.redirect('/dashboard');
+});
+
+app.post('/dashboard/tasks/:id/delete', requireDashboardAuth, (req, res) => {
+  deleteTask(req.params.id);
+  res.redirect('/dashboard');
 });
 
 app.listen(config.port, () => {

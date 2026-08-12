@@ -13,6 +13,8 @@ async function logTask(task) {
     {
       fields: {
         Title: task.title,
+        Category: task.category || '',
+        DueDate: task.dueDate || '',
         Transcript: task.transcript,
         Source: task.source,
         From: task.from,

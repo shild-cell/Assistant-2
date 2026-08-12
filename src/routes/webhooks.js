@@ -3,7 +3,7 @@ const twilio = require('twilio');
 const config = require('../config');
 const { isAllowed } = require('../allowlist');
 const { transcribeRecording } = require('../whisper');
-const { titleForTranscript } = require('../claude');
+const { analyzeTranscript } = require('../claude');
 const { addTask } = require('../db');
 const { sendTaskEmail } = require('../email');
 const { logTask } = require('../airtable');
@@ -32,9 +32,11 @@ function validateTwilioRequest(req, res, next) {
 router.use(validateTwilioRequest);
 
 async function saveAndNotify({ transcript, source, from }) {
-  const title = await titleForTranscript(transcript);
+  const { title, category, dueDate } = await analyzeTranscript(transcript);
   const task = addTask({
     title,
+    category,
+    dueDate,
     transcript,
     source,
     from,

@@ -9,9 +9,12 @@ to Airtable.
 - **Twilio** receives calls and texts and forwards them to this app as webhooks.
 - **Text messages** are saved as-is (verbatim transcript).
 - **Calls** are recorded as voicemails; **OpenAI Whisper** transcribes the audio.
-- **Claude** (Anthropic API) reads the transcript and generates a short title.
-- The task (title + verbatim transcript + source + timestamp) is:
-  - saved to a local JSON store, viewable at `/dashboard`
+- **Claude** (Anthropic API) reads the transcript and extracts a short title, a category
+  (`task`, `reminder`, `call`, `shopping`, `appointment`, `idea`, `other`), and a due date
+  if one is implied ("call back tomorrow", "renew by Friday").
+- The task (title + category + due date + verbatim transcript + source + timestamp) is:
+  - saved to a local JSON store, viewable at `/dashboard` — checkboxes to mark done, a
+    delete button per row, and open tasks sorted with the soonest due date first
   - emailed to you
   - optionally logged to an Airtable base
 - Only phone numbers listed in `ALLOWED_SENDERS` can use the line — everyone else is
@@ -40,7 +43,8 @@ real Twilio requests.
 | `TWILIO_VALIDATE_SIGNATURE` | no (default `true`) | Set `false` only for local curl testing |
 | `ALLOWED_SENDERS` | yes | Comma-separated E.164 numbers allowed to use the line, e.g. `+15551234567` |
 | `OPENAI_API_KEY` | yes | Whisper transcription of voicemails |
-| `ANTHROPIC_API_KEY` | yes | Claude generates the task title |
+| `ANTHROPIC_API_KEY` | yes | Claude generates the task title, category, and due date |
+| `TIMEZONE` | no (default `UTC`) | IANA timezone (e.g. `America/New_York`) used to resolve relative due dates and format them on the dashboard |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | yes (for email) | SMTP creds — a Gmail [App Password](https://myaccount.google.com/apppasswords) works well |
 | `EMAIL_FROM`, `EMAIL_TO` | yes (for email) | From/To addresses for the copy emails |
 | `DASHBOARD_USER`, `DASHBOARD_PASSWORD` | recommended | Protects `/dashboard` with basic auth (public URL otherwise) |

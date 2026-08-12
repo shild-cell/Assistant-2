@@ -44,6 +44,8 @@ const config = {
 
   dataDir: process.env.DATA_DIR || './data',
 
+  timezone: process.env.TIMEZONE || 'UTC',
+
   airtable: {
     apiKey: process.env.AIRTABLE_API_KEY || '',
     baseId: process.env.AIRTABLE_BASE_ID || '',
